@@ -142,7 +142,6 @@ const SERVER_PUBLIC_IP = (() => {
     return 'localhost';
 })();
 
-const FORGETMEAI_WATERMARK = 't.me/forgetmeai';
 const PORT = Number(process.env.PORT || 9655);
 const HOST = process.env.HOST || '127.0.0.1';
 
@@ -171,7 +170,6 @@ const PROXY_CORS_ORIGINS = new Set(String(process.env.PROXY_CORS_ORIGINS || '')
     .split(',')
     .map(value => normalizeOrigin(value))
     .filter(Boolean));
-function formatWatermark(prefix = 'ForgetMeAI') { return `${prefix}: ${FORGETMEAI_WATERMARK}`; }
 function printBanner() {
     console.log(`
 ███████ ██████  ███████ ███████ ██████  ███████ ███████ ███████ ██   ██
@@ -180,8 +178,7 @@ function printBanner() {
 ██      ██   ██ ██      ██      ██   ██ ██      ██      ██      ██  ██
 ██      ██   ██ ███████ ███████ ██████  ███████ ███████ ███████ ██   ██
 
-   FreeDeepseekAPI — API-прокси для DeepSeek Web Chat
-   ${formatWatermark()}
+   UltimateAI — DeepSeek API Proxy
 `);
 }
 function prompt(question) {
@@ -1629,8 +1626,7 @@ function buildToolCallResponse(toolCall, model = 'deepseek-default', prompt = ''
             message,
             finish_reason: 'tool_calls'
         }],
-        usage: buildUsage(prompt, '', reasoningContent),
-        watermark: FORGETMEAI_WATERMARK
+        usage: buildUsage(prompt, '', reasoningContent)
     };
 }
 
@@ -1649,8 +1645,7 @@ function buildTextResponse(content, prompt, model = 'deepseek-default', reasonin
             // instead of silently treating a cut-off answer as a clean stop.
             finish_reason: finishReason === 'length' ? 'length' : 'stop'
         }],
-        usage: buildUsage(prompt, content, reasoningContent),
-        watermark: FORGETMEAI_WATERMARK
+        usage: buildUsage(prompt, content, reasoningContent)
     };
 }
 
@@ -1894,7 +1889,6 @@ function toAnthropicResponse(openaiResp) {
             input_tokens: openaiResp.usage?.prompt_tokens || 0,
             output_tokens: openaiResp.usage?.completion_tokens || 0,
         },
-        watermark: FORGETMEAI_WATERMARK,
     };
     if (!hasToolCalls && msg.reasoning_content) response.reasoning_content = msg.reasoning_content;
     return response;
@@ -1936,7 +1930,6 @@ function toResponsesResponse(openaiResp, ids = {}) {
             total_tokens: openaiResp.usage?.total_tokens || 0,
             output_tokens_details: { reasoning_tokens: openaiResp.usage?.completion_tokens_details?.reasoning_tokens || 0 },
         },
-        watermark: FORGETMEAI_WATERMARK,
     };
 }
 
@@ -1994,7 +1987,7 @@ function createStreamWriter(res, apiMode, { model = 'deepseek-chat', promptToken
 
     const sse = (event, data) => { writeSse(res, event, data); state.lastWriteAt = Date.now(); };
     const chunk = (delta, finishReason = null) => sse(null, { id, object: 'chat.completion.chunk', created, model, choices: [{ index: 0, delta, finish_reason: finishReason }] });
-    const responseSkeleton = () => ({ id: itemIds.response, object: 'response', created_at: created, status: 'in_progress', model, output: [], watermark: FORGETMEAI_WATERMARK });
+    const responseSkeleton = () => ({ id: itemIds.response, object: 'response', created_at: created, status: 'in_progress', model, output: [] });
 
     function start() {
         if (state.started) return;
@@ -2002,7 +1995,7 @@ function createStreamWriter(res, apiMode, { model = 'deepseek-chat', promptToken
         res.writeHead(200, SSE_HEADERS);
         state.lastWriteAt = Date.now();
         if (apiMode === 'anthropic') {
-            sse('message_start', { type: 'message_start', message: { id: 'msg_' + id, type: 'message', role: 'assistant', model, content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: promptTokens, output_tokens: 0 }, watermark: FORGETMEAI_WATERMARK } });
+            sse('message_start', { type: 'message_start', message: { id: 'msg_' + id, type: 'message', role: 'assistant', model, content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: promptTokens, output_tokens: 0 } } });
         } else if (apiMode === 'responses') {
             sse('response.created', { type: 'response.created', response: responseSkeleton() });
             sse('response.in_progress', { type: 'response.in_progress', response: responseSkeleton() });
@@ -2585,7 +2578,7 @@ const server = http.createServer(async (req, res) => {
     // Health check
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health')) {
         const includePrivateStatus = !PROXY_API_KEY || isProxyAuthorized(req.headers.authorization, PROXY_API_KEY, req.headers['x-api-key']);
-        const health = { status: 'ok', service: 'FreeDeepseekAPI', watermark: FORGETMEAI_WATERMARK };
+        const health = { status: 'ok', service: 'UltimateAI' };
         if (includePrivateStatus) Object.assign(health, {
             models: SUPPORTED_MODEL_IDS,
             unsupported_models: Object.keys(MODEL_CONFIGS).filter(id => !MODEL_CONFIGS[id].supported),
@@ -2620,7 +2613,7 @@ const server = http.createServer(async (req, res) => {
     // Full mapping, including Web models observed but not currently usable through the direct API.
     if (req.method === 'GET' && (url.pathname === '/v1/model-capabilities' || url.pathname === '/api/model-capabilities')) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ object: 'model_capabilities', watermark: FORGETMEAI_WATERMARK, data: ALL_MODEL_CAPABILITIES }));
+        res.end(JSON.stringify({ object: 'model_capabilities', data: ALL_MODEL_CAPABILITIES }));
         return;
     }
 
@@ -3324,7 +3317,6 @@ async function runAuthScript() {
 }
 
 function printStatus() {
-    console.log(`\n${formatWatermark()}`);
     console.log(`Auth: ${hasAuthConfig() ? '✅ OK' : '❌ не найден deepseek-auth.json'}`);
     console.log(`Auth source: ${process.env.DEEPSEEK_AUTH_DIR || DS_CONFIG_PATH}`);
     console.log(`Аккаунты: ${accounts.length ? accounts.map(a => `${a.id}${a.cooldownUntil > Date.now() ? ' (cooldown)' : ''}`).join(', ') : 'нет'}`);
@@ -3341,7 +3333,6 @@ async function showStartupMenu() {
     while (true) {
         printStatus();
         console.log('\n=== Меню ===');
-        console.log(`ForgetMeAI: ${FORGETMEAI_WATERMARK}`);
         console.log('1 - Авторизоваться / обновить DeepSeek login');
         console.log('2 - Импортировать auth-файл / cookies');
         console.log('3 - Показать модели и статусы');
@@ -3386,7 +3377,7 @@ async function main() {
     setInterval(sweepIdleSessions, 10 * 60 * 1000).unref();
     server.listen(PORT, HOST, () => {
         console.log(`[DS-API] Server on http://${HOST}:${PORT} (multi-agent sessions enabled)`);
-        console.log(`[DS-API] ${formatWatermark()}`);
+        console.log('[UltimateAI] API proxy ready');
         console.log('[DS-API] POST /v1/chat/completions (OpenAI Chat Completions, stream=true|false)');
         console.log('[DS-API] POST /v1/messages — Anthropic Messages shim for Claude Code');
         console.log('[DS-API] POST /v1/responses — OpenAI Responses API shim');
