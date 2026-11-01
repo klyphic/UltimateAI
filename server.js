@@ -583,6 +583,16 @@ const MODEL_CONFIGS = {
 };
 
 const SUPPORTED_MODEL_IDS = Object.keys(MODEL_CONFIGS).filter(id => MODEL_CONFIGS[id].supported);
+
+// Curated public catalogue: one entry per useful capability combination.
+// Other supported aliases remain callable for backwards compatibility.
+const PUBLIC_MODEL_IDS = [
+    'deepseek-chat',
+    'deepseek-reasoner',
+    'deepseek-chat-search',
+    'deepseek-reasoner-search',
+    'deepseek-vision',
+].filter(id => MODEL_CONFIGS[id]?.supported);
 const ALL_MODEL_CAPABILITIES = Object.fromEntries(Object.entries(MODEL_CONFIGS).map(([id, cfg]) => [id, {
     id,
     real_model: cfg.real_model,
@@ -2606,7 +2616,7 @@ const server = http.createServer(async (req, res) => {
     // Models: OpenAI-compatible list exposes only aliases verified to work through this proxy.
     if (req.method === 'GET' && url.pathname === '/v1/models') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ object: 'list', data: SUPPORTED_MODEL_IDS.map(id => ({ id, object: 'model', created: 1700000000, owned_by: 'deepseek-web', real_model: MODEL_CONFIGS[id].real_model, capabilities: MODEL_CONFIGS[id].capabilities })) }));
+        res.end(JSON.stringify({ object: 'list', data: PUBLIC_MODEL_IDS.map(id => ({ id, object: 'model', created: 1700000000, owned_by: 'deepseek-web', real_model: MODEL_CONFIGS[id].real_model, capabilities: MODEL_CONFIGS[id].capabilities })) }));
         return;
     }
 
