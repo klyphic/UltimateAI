@@ -2590,7 +2590,7 @@ const server = http.createServer(async (req, res) => {
             in_flight: inFlight,
             accounts: accounts.map(accountStatus),
             config_ready: hasAuthConfig(),
-            session_reuse: { strategy: 'sticky per x-agent-session/user', automatic_rollover: false, automatic_idle_eviction: false, persistence: 'process_memory', reset: 'explicit /new or POST /reset-session', reset_all: 'POST /reset-session?agent=all' },
+            session_reuse: { strategy: 'sticky per x-agent-session/user', automatic_rollover: false, automatic_idle_eviction: false, persistence: 'supabase_pending_configuration', reset: 'explicit /new or POST /reset-session', reset_all: 'POST /reset-session?agent=all' },
         });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(health));
