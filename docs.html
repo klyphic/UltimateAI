@@ -8,11 +8,11 @@
 <style>
 :root{color-scheme:dark;--bg:#090d18;--panel:#101827;--panel2:#0c1422;--line:#243247;--text:#e8eef8;--muted:#98a8bd;--accent:#8b9cff;--green:#69d5ad;--code:#080e19}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#1c2b50 0,transparent 40%),var(--bg);color:var(--text);font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
-a{color:#aebcff;text-decoration:none}a:hover{text-decoration:underline}.wrap{max-width:1120px;margin:auto;padding:38px 22px 80px}
+a{color:#aebcff;text-decoration:none}a:hover{text-decoration:underline}.wrap{width:100%;max-width:1120px;margin:0 auto;padding:38px 22px 80px;min-width:0}
 header{padding:28px 0 34px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--green);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
 h1{font-size:clamp(34px,6vw,54px);line-height:1.08;letter-spacing:-.04em;margin:10px 0}h2{font-size:24px;letter-spacing:-.025em;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}
 p{color:var(--muted);margin:8px 0 14px}.hero-url{display:inline-flex;align-items:center;gap:9px;background:#17243a;border:1px solid #344563;border-radius:10px;padding:8px 13px;color:#dce5ff;font-family:ui-monospace,monospace;word-break:break-all}
-.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:34px;margin-top:30px}.nav{position:sticky;top:20px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.nav b{display:block;margin-bottom:8px}.nav a{display:block;color:var(--muted);padding:5px 0;font-size:13px}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:34px;margin-top:30px;min-width:0}.layout>*,main,section{min-width:0}.nav{position:sticky;top:20px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.nav b{display:block;margin-bottom:8px}.nav a{display:block;color:var(--muted);padding:5px 0;font-size:13px}
 section{scroll-margin-top:22px;margin:0 0 38px}.card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:22px;margin:14px 0}
 .pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:#c3cee0;background:#121d2d}
 .endpoint{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.method{font:800 11px ui-monospace,monospace;padding:4px 8px;border-radius:6px;background:#17392f;color:#8de3bd}.method.post{background:#392c19;color:#ffd18b}.path{font:600 14px ui-monospace,monospace;color:#dce5f5}
@@ -21,7 +21,7 @@ pre{position:relative;overflow:auto;background:var(--code);border:1px solid #1d2
 .note{border-left:3px solid var(--accent);padding:9px 13px;background:#121c2c;color:#bdc9dc;border-radius:0 8px 8px 0;margin:14px 0}.warn{border-left-color:#e7b66e}
 table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px 9px;vertical-align:top}th{color:#cbd6e7}td{color:var(--muted)}code{font-family:ui-monospace,monospace;color:#c6d1ff;background:#172236;padding:2px 5px;border-radius:4px}
 .small{font-size:12px;color:var(--muted)}footer{border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:12px}
-@media(max-width:780px){.layout{grid-template-columns:1fr}.nav{position:static;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}.nav b{grid-column:1/-1}.wrap{padding:24px 14px 60px}.card{padding:16px}pre{font-size:11px}}
+@media(max-width:780px){html,body{width:100%;max-width:100%;overflow-x:hidden}.wrap{width:100%;max-width:100%;padding:22px 14px 48px}.layout{width:100%;grid-template-columns:minmax(0,1fr);gap:18px;margin-top:20px}.layout>*,main,section{width:100%;min-width:0}.nav{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;padding:13px}.nav b{grid-column:1/-1}.nav a{font-size:12px;padding:4px 0}.card{padding:14px;margin:11px 0}.hero-url{max-width:100%;font-size:12px}.pills{gap:6px}.pill{font-size:11px}pre{max-width:100%;font-size:11px;padding:38px 12px 13px;white-space:pre;overflow-x:auto}table{display:block;overflow-x:auto;white-space:nowrap}h1{font-size:36px}h2{font-size:21px}section{scroll-margin-top:12px}}@media(max-width:380px){.wrap{padding-left:11px;padding-right:11px}.nav{grid-template-columns:1fr 1fr}.card{padding:11px}.path{font-size:12px}.hero-url{font-size:11px}}
 </style>
 </head>
 <body>
@@ -84,20 +84,17 @@ table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0}th,td{tex
  <div class="endpoint"><span class="method">GET</span><span class="path">/v1/model-capabilities</span></div>
  <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/v1/model-capabilities" \
   -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
- <h3>Known model aliases</h3>
- <table><thead><tr><th>Model</th><th>Behavior</th></tr></thead><tbody>
- <tr><td><code>deepseek-chat</code></td><td>Standard chat</td></tr>
- <tr><td><code>deepseek-default</code></td><td>Standard chat alias</td></tr>
- <tr><td><code>deepseek-v4-flash</code></td><td>Standard chat alias</td></tr>
- <tr><td><code>deepseek-v4.1-flash</code></td><td>Standard chat alias</td></tr>
- <tr><td><code>deepseek-v3</code></td><td>Legacy standard alias</td></tr>
- <tr><td><code>deepseek-reasoner</code>, <code>deepseek-r1</code></td><td>Deep thinking enabled</td></tr>
- <tr><td><code>deepseek-chat-search</code>, <code>deepseek-default-search</code></td><td>Web search enabled</td></tr>
- <tr><td><code>deepseek-reasoner-search</code>, <code>deepseek-r1-search</code></td><td>Deep thinking + web search</td></tr>
- <tr><td><code>deepseek-expert</code>, <code>deepseek-v4-pro</code></td><td>Legacy aliases; see capabilities endpoint</td></tr>
- <tr><td><code>deepseek-vision</code></td><td>Image-capable alias when image upload is enabled</td></tr>
+ <h3>Featured models</h3>
+ <p>Use these six model IDs in your requests. Each alias selects a specific capability mode supported by this proxy.</p>
+ <table><thead><tr><th>Model ID</th><th>Mode</th><th>What it does</th></tr></thead><tbody>
+ <tr><td><code>deepseek-v4-flash</code></td><td>V4 Flash</td><td>Fast general chat</td></tr>
+ <tr><td><code>deepseek-v4.1-flash</code></td><td>V4.1 Flash</td><td>Latest unified web-chat alias</td></tr>
+ <tr><td><code>deepseek-v4-pro</code></td><td>V4 Pro (legacy alias)</td><td>Retired upstream mode; currently routed to the DeepThink-enabled unified mode</td></tr>
+ <tr><td><code>deepseek-vision</code></td><td>Vision</td><td>Image understanding (when image upload is enabled)</td></tr>
+ <tr><td><code>deepseek-reasoner</code></td><td>Reasoning</td><td>Deep thinking / reasoning responses</td></tr>
+ <tr><td><code>deepseek-chat-search</code></td><td>Web Search</td><td>Chat with web search enabled</td></tr>
  </tbody></table>
- <p class="small">The live <code>/v1/models</code> response is authoritative. Older aliases may be marked deprecated or unavailable by <code>/v1/model-capabilities</code>.</p>
+ <div class="note">These are the featured model IDs for this documentation. The live <code>/v1/models</code> endpoint shows the public catalogue exposed by the server; <code>/v1/model-capabilities</code> returns detailed capability metadata.</div>
 </section>
 
 <section id="endpoints">
