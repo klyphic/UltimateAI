@@ -2677,7 +2677,10 @@ const server = http.createServer(async (req, res) => {
         const agentId = url.searchParams.get('agent') || 'default';
         if (agentId === 'all') {
             const count = sessions.size;
-            if (sessionStore.enabled) await sessionStore.clear();
+            if (sessionStore.enabled) {
+                await Promise.allSettled([...sessionWriteQueues.values()]);
+                await sessionStore.clear();
+            }
             sessions.clear();
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'all_sessions_cleared', count }));
