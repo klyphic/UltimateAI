@@ -496,13 +496,11 @@ function resetRemoteSession(session) {
 }
 
 function prepareSessionForPrompt(session, now = Date.now()) {
-    if (!session || !session.id) return null;
-    let reason = null;
-    if (session.messageCount >= MAX_MESSAGE_DEPTH) reason = 'max_message_depth';
-    else if (session.createdAt && now - session.createdAt > SESSION_TTL_MS) reason = 'session_ttl';
-    else if ((session.remoteChars || 0) >= MAX_SESSION_CONTEXT_CHARS) reason = 'max_context_chars';
-    if (!reason) return null;
-    return { reason, ...resetRemoteSession(session) };
+    // Client-provided x-agent-session is the durable conversation identity.
+    // Never silently roll a user's DeepSeek chat over due to age, message
+    // count, or accumulated context size. Explicit /new and /reset-session
+    // remain the only normal reset paths.
+    return null;
 }
 
 function getOrCreateAgentSession(agentId) {
@@ -516,14 +514,10 @@ function getOrCreateAgentSession(agentId) {
 
 // Evict idle sessions so the Map (keyed by client IP / user id) can't grow without
 // bound on a long-running process. Drops entries untouched for 2× the session TTL.
-function sweepIdleSessions(maxIdleMs = SESSION_TTL_MS * 2) {
-    const now = Date.now();
-    let removed = 0;
-    for (const [agentId, session] of sessions) {
-        if (now - (session.lastActivityAt || 0) > maxIdleMs) { sessions.delete(agentId); removed++; }
-    }
-    if (removed) console.log(`[DS-API] swept ${removed} idle session(s); ${sessions.size} remain`);
-    return removed;
+function sweepIdleSessions() {
+    // Session IDs must continue resolving to their existing DeepSeek chats,
+    // including after long periods of inactivity. Do not evict mappings here.
+    return 0;
 }
 
 // solvePOW() lives in lib/pow (compiled-module cache + WASM-fetch timeout),
@@ -2596,7 +2590,7 @@ const server = http.createServer(async (req, res) => {
             in_flight: inFlight,
             accounts: accounts.map(accountStatus),
             config_ready: hasAuthConfig(),
-            session_reuse: { strategy: 'sticky per x-agent-session/user', ttl_minutes: Math.round(SESSION_TTL_MS / 60000), max_messages: MAX_MESSAGE_DEPTH, reset_all: 'POST /reset-session?agent=all' },
+            session_reuse: { strategy: 'sticky per x-agent-session/user', automatic_rollover: false, automatic_idle_eviction: false, persistence: 'process_memory', reset: 'explicit /new or POST /reset-session', reset_all: 'POST /reset-session?agent=all' },
         });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(health));
