@@ -192,12 +192,13 @@ test('consumed upstream HTTP errors retain status, type, and retry hints', () =>
   assert.equal(unauthorized.type, 'authentication_error');
 });
 
-test('sweepIdleSessions evicts only idle entries', () => {
+test('sweepIdleSessions keeps session mappings regardless of inactivity', () => {
   serverInternals.sessions.set('stale-x', { lastActivityAt: 1 });
   serverInternals.sessions.set('fresh-x', { lastActivityAt: Date.now() });
-  serverInternals.sweepIdleSessions(60 * 1000);
-  assert.equal(serverInternals.sessions.has('stale-x'), false);
+  assert.equal(serverInternals.sweepIdleSessions(1), 0);
+  assert.equal(serverInternals.sessions.has('stale-x'), true);
   assert.equal(serverInternals.sessions.has('fresh-x'), true);
+  serverInternals.sessions.delete('stale-x');
   serverInternals.sessions.delete('fresh-x');
 });
 
@@ -645,25 +646,23 @@ test('cross-account continuation is accepted only with a fresh recovery prompt',
   }), false);
 });
 
-test('TTL and depth rollover happens before prompt construction and preserves recovery state', () => {
+test('session age and message count never trigger automatic remote-session rollover', () => {
   const depthSession = serverInternals.createSession();
   depthSession.id = 'deep-session';
-  depthSession.messageCount = 100;
+  depthSession.messageCount = 1000;
   depthSession.accountId = 'account_1';
   depthSession.history.push({ user: 'u', assistant: 'a' });
-  const depthReset = serverInternals.prepareSessionForPrompt(depthSession, Date.now());
-  assert.equal(depthReset.reason, 'max_message_depth');
-  assert.equal(depthSession.id, null);
+  assert.equal(serverInternals.prepareSessionForPrompt(depthSession, Date.now()), null);
+  assert.equal(depthSession.id, 'deep-session');
   assert.equal(depthSession.history.length, 1);
   assert.equal(depthSession.accountId, 'account_1');
 
   const now = Date.now();
   const ttlSession = serverInternals.createSession();
   ttlSession.id = 'old-session';
-  ttlSession.createdAt = now - (2 * 60 * 60 * 1000) - 1;
-  const ttlReset = serverInternals.prepareSessionForPrompt(ttlSession, now);
-  assert.equal(ttlReset.reason, 'session_ttl');
-  assert.equal(ttlReset.failedSessionId, 'old-session');
+  ttlSession.createdAt = now - (10 * 60 * 60 * 1000);
+  assert.equal(serverInternals.prepareSessionForPrompt(ttlSession, now), null);
+  assert.equal(ttlSession.id, 'old-session');
 });
 
 test('tool results use the global prompt cap instead of an unconditional 8k truncation', () => {
