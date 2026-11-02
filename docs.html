@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090d18">
+<title>UltimateAI API Documentation</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#101827;--panel2:#0c1422;--line:#243247;--text:#e8eef8;--muted:#98a8bd;--accent:#8b9cff;--green:#69d5ad;--code:#080e19}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#1c2b50 0,transparent 40%),var(--bg);color:var(--text);font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+a{color:#aebcff;text-decoration:none}a:hover{text-decoration:underline}.wrap{max-width:1120px;margin:auto;padding:38px 22px 80px}
+header{padding:28px 0 34px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--green);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+h1{font-size:clamp(34px,6vw,54px);line-height:1.08;letter-spacing:-.04em;margin:10px 0}h2{font-size:24px;letter-spacing:-.025em;margin:0 0 12px}h3{font-size:17px;margin:20px 0 8px}
+p{color:var(--muted);margin:8px 0 14px}.hero-url{display:inline-flex;align-items:center;gap:9px;background:#17243a;border:1px solid #344563;border-radius:10px;padding:8px 13px;color:#dce5ff;font-family:ui-monospace,monospace;word-break:break-all}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:34px;margin-top:30px}.nav{position:sticky;top:20px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.nav b{display:block;margin-bottom:8px}.nav a{display:block;color:var(--muted);padding:5px 0;font-size:13px}
+section{scroll-margin-top:22px;margin:0 0 38px}.card{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:22px;margin:14px 0}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 9px;color:#c3cee0;background:#121d2d}
+.endpoint{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.method{font:800 11px ui-monospace,monospace;padding:4px 8px;border-radius:6px;background:#17392f;color:#8de3bd}.method.post{background:#392c19;color:#ffd18b}.path{font:600 14px ui-monospace,monospace;color:#dce5f5}
+pre{position:relative;overflow:auto;background:var(--code);border:1px solid #1d2b40;border-radius:11px;padding:17px;margin:12px 0 18px;color:#d9e5f7;font:12.5px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+.copy{position:absolute;right:8px;top:8px;background:#1b2a40;border:1px solid #344660;color:#dce7f8;border-radius:7px;padding:5px 9px;font-size:11px;cursor:pointer}.copy:hover{background:#2b3e5b}
+.note{border-left:3px solid var(--accent);padding:9px 13px;background:#121c2c;color:#bdc9dc;border-radius:0 8px 8px 0;margin:14px 0}.warn{border-left-color:#e7b66e}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:12px 0}th,td{text-align:left;border-bottom:1px solid var(--line);padding:10px 9px;vertical-align:top}th{color:#cbd6e7}td{color:var(--muted)}code{font-family:ui-monospace,monospace;color:#c6d1ff;background:#172236;padding:2px 5px;border-radius:4px}
+.small{font-size:12px;color:var(--muted)}footer{border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:12px}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.nav{position:static;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}.nav b{grid-column:1/-1}.wrap{padding:24px 14px 60px}.card{padding:16px}pre{font-size:11px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div class="eyebrow">API Reference · v1</div>
+ <h1>UltimateAI</h1>
+ <p>DeepSeek Web API proxy with OpenAI-compatible, Anthropic-compatible and Responses API endpoints.</p>
+ <div class="hero-url">https://ai.fastdevelopers.in</div>
+ <div class="pills"><span class="pill">Bearer authentication</span><span class="pill">Agent sessions</span><span class="pill">Streaming</span><span class="pill">Supabase persistence</span></div>
+</header>
+<div class="layout">
+<nav class="nav">
+ <b>Documentation</b>
+ <a href="#quickstart">Quick start</a><a href="#auth">Authentication</a><a href="#models">Models</a>
+ <a href="#endpoints">Endpoints</a><a href="#chat">Chat completions</a><a href="#streaming">Streaming</a>
+ <a href="#sessions">Sessions & memory</a><a href="#anthropic">Anthropic Messages</a>
+ <a href="#responses">Responses API</a><a href="#images">Images</a><a href="#errors">Errors</a>
+</nav>
+<main>
+<section id="quickstart">
+ <h2>Quick start</h2>
+ <p>Set your API key once, then send a chat completion. Replace <code>YOUR_PROXY_API_KEY</code> with the key issued for your UltimateAI deployment. Do not publish your key in frontend code or public repositories.</p>
+ <div class="card">
+  <div class="endpoint"><span class="method">GET</span><span class="path">/v1/models</span></div>
+  <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/v1/models" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+ </div>
+ <div class="card">
+  <div class="endpoint"><span class="method post">POST</span><span class="path">/v1/chat/completions</span></div>
+  <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: my-agent-001" \
+  -d '{
+    "model": "deepseek-chat",
+    "messages": [
+      {"role": "user", "content": "Hello! Introduce yourself briefly."}
+    ],
+    "stream": false
+  }'</pre>
+ </div>
+ <div class="note">Use a stable, unique <code>x-agent-session</code> value for each independent agent or conversation. Reuse that same value on later turns to continue its conversation.</div>
+</section>
+
+<section id="auth">
+ <h2>Authentication</h2>
+ <p>Send the proxy key using either supported header format. The key is required for API endpoints except the public health, readiness and documentation pages.</p>
+ <pre><button class="copy">Copy</button># Preferred: Bearer token
+-H "Authorization: Bearer YOUR_PROXY_API_KEY"
+
+# Also supported
+-H "x-api-key: YOUR_PROXY_API_KEY"</pre>
+ <div class="note warn">Keep the key on your backend. Never embed a production proxy key in browser JavaScript, Android APK assets, or a public website.</div>
+</section>
+
+<section id="models">
+ <h2>Models</h2>
+ <p>Call <code>GET /v1/models</code> for the live list of aliases currently exposed by this deployment. Model availability can change with upstream DeepSeek Web behavior.</p>
+ <div class="endpoint"><span class="method">GET</span><span class="path">/v1/model-capabilities</span></div>
+ <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/v1/model-capabilities" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+ <h3>Known model aliases</h3>
+ <table><thead><tr><th>Model</th><th>Behavior</th></tr></thead><tbody>
+ <tr><td><code>deepseek-chat</code></td><td>Standard chat</td></tr>
+ <tr><td><code>deepseek-default</code></td><td>Standard chat alias</td></tr>
+ <tr><td><code>deepseek-v4-flash</code></td><td>Standard chat alias</td></tr>
+ <tr><td><code>deepseek-v4.1-flash</code></td><td>Standard chat alias</td></tr>
+ <tr><td><code>deepseek-v3</code></td><td>Legacy standard alias</td></tr>
+ <tr><td><code>deepseek-reasoner</code>, <code>deepseek-r1</code></td><td>Deep thinking enabled</td></tr>
+ <tr><td><code>deepseek-chat-search</code>, <code>deepseek-default-search</code></td><td>Web search enabled</td></tr>
+ <tr><td><code>deepseek-reasoner-search</code>, <code>deepseek-r1-search</code></td><td>Deep thinking + web search</td></tr>
+ <tr><td><code>deepseek-expert</code>, <code>deepseek-v4-pro</code></td><td>Legacy aliases; see capabilities endpoint</td></tr>
+ <tr><td><code>deepseek-vision</code></td><td>Image-capable alias when image upload is enabled</td></tr>
+ </tbody></table>
+ <p class="small">The live <code>/v1/models</code> response is authoritative. Older aliases may be marked deprecated or unavailable by <code>/v1/model-capabilities</code>.</p>
+</section>
+
+<section id="endpoints">
+ <h2>Endpoints</h2>
+ <table><thead><tr><th>Method</th><th>Path</th><th>Purpose</th><th>Auth</th></tr></thead><tbody>
+ <tr><td>GET</td><td><code>/</code>, <code>/health</code></td><td>Service health and deployment status</td><td>Public basic status; details with key</td></tr>
+ <tr><td>GET</td><td><code>/readyz</code></td><td>Readiness (at least one available upstream account)</td><td>Public</td></tr>
+ <tr><td>GET</td><td><code>/v1/models</code></td><td>Available model aliases</td><td>Required</td></tr>
+ <tr><td>GET</td><td><code>/v1/model-capabilities</code></td><td>Model mapping and capabilities</td><td>Required</td></tr>
+ <tr><td>POST</td><td><code>/v1/chat/completions</code></td><td>OpenAI Chat Completions format</td><td>Required</td></tr>
+ <tr><td>POST</td><td><code>/v1/responses</code></td><td>OpenAI Responses API compatible shim</td><td>Required</td></tr>
+ <tr><td>POST</td><td><code>/v1/messages</code></td><td>Anthropic Messages API compatible shim</td><td>Required</td></tr>
+ <tr><td>GET</td><td><code>/v1/sessions</code></td><td>List currently loaded agent sessions</td><td>Required</td></tr>
+ <tr><td>POST</td><td><code>/reset-session?agent=ID</code></td><td>Reset one agent's remote chat</td><td>Required</td></tr>
+ <tr><td>POST</td><td><code>/reset-session?agent=all</code></td><td>Clear all sessions</td><td>Required</td></tr>
+ </tbody></table>
+</section>
+
+<section id="chat">
+ <h2>Chat Completions</h2>
+ <p>Endpoint: <code>POST /v1/chat/completions</code>. Accepts standard chat messages, system instructions, optional tools and <code>stream</code>.</p>
+ <h3>Multi-turn conversation</h3>
+ <p>Send the same session header for every turn. This example asks a second question using the same agent session.</p>
+ <pre><button class="copy">Copy</button># Turn 1
+curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: support-agent-42" \
+  -d '{
+    "model": "deepseek-chat",
+    "messages": [
+      {"role": "user", "content": "Remember this: my project is called Klyphic. Reply OK."}
+    ],
+    "stream": false
+  }'
+
+# Turn 2 — reuse exactly the same session ID
+curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: support-agent-42" \
+  -d '{
+    "model": "deepseek-chat",
+    "messages": [
+      {"role": "user", "content": "What is the name of my project?"}
+    ],
+    "stream": false
+  }'</pre>
+ <h3>Reasoning model</h3>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: reasoning-agent-01" \
+  -d '{
+    "model": "deepseek-reasoner",
+    "messages": [
+      {"role": "user", "content": "Explain the difference between a process and a thread."}
+    ],
+    "stream": false
+  }'</pre>
+ <h3>Web search model</h3>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: search-agent-01" \
+  -d '{
+    "model": "deepseek-chat-search",
+    "messages": [
+      {"role": "user", "content": "Find recent updates about AI agents and summarize them."}
+    ],
+    "stream": false
+  }'</pre>
+</section>
+
+<section id="streaming">
+ <h2>Streaming responses</h2>
+ <p>Set <code>"stream": true</code> and use <code>curl -N</code> to keep the Server-Sent Events stream visible as it arrives.</p>
+ <pre><button class="copy">Copy</button>curl -N -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: streaming-agent-01" \
+  -d '{
+    "model": "deepseek-chat",
+    "messages": [
+      {"role": "user", "content": "Write a detailed explanation of how HTTP works."}
+    ],
+    "stream": true
+  }'</pre>
+ <p>Streaming responses use SSE data events and finish with <code>data: [DONE]</code>. If a stream has already started, a late upstream error is delivered as an SSE error event.</p>
+</section>
+
+<section id="sessions">
+ <h2>Sessions & conversation memory</h2>
+ <p>Session identity is selected in this order:</p>
+ <ol>
+  <li><code>x-agent-session</code> request header (recommended)</li>
+  <li><code>session</code> field in JSON body</li>
+  <li><code>user</code> field in JSON body</li>
+  <li>Fallback to the request's remote IP (local loopback requests use <code>dev-agent</code>)</li>
+ </ol>
+ <div class="note warn">If you omit the session ID, requests coming from the same backend IP can share one fallback session. In a multi-user bot platform, always send a unique <code>x-agent-session</code> per agent/conversation.</div>
+ <h3>List active sessions</h3>
+ <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/v1/sessions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+ <h3>Reset one agent session</h3>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/reset-session?agent=support-agent-42" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+ <p>Resetting one session starts a fresh remote DeepSeek chat while retaining local recovery history where available.</p>
+ <h3>Reset all sessions</h3>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/reset-session?agent=all" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
+ <div class="note warn">This is destructive: it clears all currently loaded sessions and all persisted session rows. Use only for maintenance/testing.</div>
+ <h3>Start a new chat using the /new command</h3>
+ <p>Send <code>/new</code> as the latest user message with the same session ID to reset that agent's chat and history.</p>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: support-agent-42" \
+  -d '{
+    "model": "deepseek-chat",
+    "messages": [{"role": "user", "content": "/new"}],
+    "stream": false
+  }'</pre>
+</section>
+
+<section id="anthropic">
+ <h2>Anthropic Messages API</h2>
+ <p>Endpoint: <code>POST /v1/messages</code>. The proxy accepts Anthropic-style <code>system</code>, <code>messages</code>, <code>max_tokens</code>, <code>tools</code> and <code>stream</code> fields.</p>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/messages" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "x-agent-session: anthropic-agent-01" \
+  -d '{
+    "model": "deepseek-chat",
+    "max_tokens": 1024,
+    "system": "You are a concise technical assistant.",
+    "messages": [
+      {"role": "user", "content": "Explain REST APIs in simple terms."}
+    ],
+    "stream": false
+  }'</pre>
+</section>
+
+<section id="responses">
+ <h2>OpenAI Responses API</h2>
+ <p>Endpoint: <code>POST /v1/responses</code>. Send a string or structured input array. Use <code>instructions</code> for system-level guidance.</p>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/responses" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: responses-agent-01" \
+  -d '{
+    "model": "deepseek-chat",
+    "instructions": "You are a helpful coding assistant.",
+    "input": "Show a Python function that checks whether a number is prime.",
+    "stream": false
+  }'</pre>
+</section>
+
+<section id="images">
+ <h2>Image input</h2>
+ <p>Image input is supported through inline base64 image data for PNG, JPEG, WebP and GIF. The <code>deepseek-vision</code> alias is listed when image upload is enabled on the server.</p>
+ <p>For privacy and SSRF safety, remote image URLs are not downloaded by this proxy. Send a data URL instead. Keep images within the deployment's configured size limits.</p>
+ <pre><button class="copy">Copy</button># IMAGE_BASE64 must contain the base64 bytes of a PNG/JPEG/WebP/GIF image.
+curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "x-agent-session: vision-agent-01" \
+  -d '{
+    "model": "deepseek-vision",
+    "messages": [{
+      "role": "user",
+      "content": [
+        {"type": "text", "text": "Describe this image."},
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,IMAGE_BASE64"}}
+      ]
+    }],
+    "stream": false
+  }'</pre>
+</section>
+
+<section id="errors">
+ <h2>Errors & troubleshooting</h2>
+ <table><thead><tr><th>HTTP</th><th>Meaning</th><th>What to do</th></tr></thead><tbody>
+ <tr><td>400</td><td>Invalid request or unsupported/unknown model</td><td>Check JSON, required messages and model list.</td></tr>
+ <tr><td>401</td><td>Missing or invalid proxy key</td><td>Check Bearer token or <code>x-api-key</code>.</td></tr>
+ <tr><td>404</td><td>Unknown endpoint or requested session not found</td><td>Check path and agent ID.</td></tr>
+ <tr><td>413</td><td>Request body exceeds 10 MB</td><td>Reduce payload/image size.</td></tr>
+ <tr><td>429</td><td>Rate limited or upstream account pool unavailable</td><td>Honor <code>Retry-After</code> and retry later.</td></tr>
+ <tr><td>502</td><td>Upstream or malformed tool-call response</td><td>Inspect error JSON and retry if appropriate.</td></tr>
+ <tr><td>503</td><td>Proxy busy or no ready upstream account</td><td>Retry with backoff; check <code>/readyz</code>.</td></tr>
+ <tr><td>504</td><td>Upstream request timeout</td><td>Retry after a short delay.</td></tr>
+ </tbody></table>
+ <h3>Health checks</h3>
+ <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/health"
+curl "https://ai.fastdevelopers.in/readyz"</pre>
+ <p>For detailed status, include the proxy key on <code>/health</code>. Do not share its account or configuration details publicly.</p>
+</section>
+<footer>UltimateAI API Documentation · Base URL: https://ai.fastdevelopers.in · Keep API credentials private.</footer>
+</main>
+</div>
+</div>
+<script>
+document.querySelectorAll('pre').forEach(block=>{
+ const button=block.querySelector('.copy');
+ if(!button)return;
+ button.addEventListener('click',async()=>{
+  const text=block.innerText.replace(/^Copy\\s*/,'');
+  try{await navigator.clipboard.writeText(text);button.textContent='Copied';}
+  catch(e){button.textContent='Select & copy';}
+  setTimeout(()=>button.textContent='Copy',1400);
+ });
+});
+</script>
+</body>
+</html>
