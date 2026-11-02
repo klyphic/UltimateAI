@@ -19,10 +19,23 @@ const crypto = require('crypto');
 const events = require('events');
 const { spawnSync } = require('child_process');
 const { solvePOW } = require('./lib/pow');
+const { createSessionStore } = require('./lib/session-store');
 const { loadDotEnv } = require('./lib/env');
 
 // Real environment variables always win over .env.
 if (require.main === module) loadDotEnv(path.join(__dirname, '.env'));
+
+const sessionStore = createSessionStore();
+const sessionWriteQueues = new Map();
+function persistSession(agentId, session) {
+    if (!sessionStore.enabled || !agentId || !session) return Promise.resolve(false);
+    const previous = sessionWriteQueues.get(agentId) || Promise.resolve();
+    const current = previous.catch(() => {}).then(() => sessionStore.save(agentId, session));
+    sessionWriteQueues.set(agentId, current);
+    return current.finally(() => {
+        if (sessionWriteQueues.get(agentId) === current) sessionWriteQueues.delete(agentId);
+    });
+}
 
 function envNumber(name, fallback, min = 0) {
     const raw = process.env[name];
@@ -457,8 +470,9 @@ if (require.main === module) {
     loadDeepSeekConfig({ fatal: false });
 }
 
-function createSession() {
+function createSession(agentId = null) {
     return {
+        agentId,
         id: null,
         parentMessageId: null,
         createdAt: null,
@@ -492,6 +506,7 @@ function resetRemoteSession(session) {
     session.remoteChars = 0;
     // Keep local recovery history and the sticky account assignment. A remote
     // chat can be unhealthy without invalidating either of those local hints.
+    if (session.agentId) persistSession(session.agentId, session).catch(error => console.error(`[${session.agentId}] Supabase reset save failed: ${error.message}`));
     return failed;
 }
 
@@ -503,9 +518,23 @@ function prepareSessionForPrompt(session, now = Date.now()) {
     return null;
 }
 
-function getOrCreateAgentSession(agentId) {
+const sessionLoadPromises = new Map();
+async function getOrCreateAgentSession(agentId) {
     if (!sessions.has(agentId)) {
-        sessions.set(agentId, createSession());
+        let loading = sessionLoadPromises.get(agentId);
+        if (!loading) {
+            loading = (async () => {
+                const restored = sessionStore.enabled ? await sessionStore.load(agentId) : null;
+                const session = restored || createSession(agentId);
+                session.agentId = agentId;
+                sessions.set(agentId, session);
+                if (restored?.id) console.log(`[${agentId}] Restored DeepSeek chat ${restored.id} from Supabase`);
+                return session;
+            })();
+            sessionLoadPromises.set(agentId, loading);
+        }
+        try { await loading; }
+        finally { if (sessionLoadPromises.get(agentId) === loading) sessionLoadPromises.delete(agentId); }
     }
     const session = sessions.get(agentId);
     session.lastActivityAt = Date.now();
@@ -836,6 +865,7 @@ async function createRemoteChat(session, account, agentTag, label = 'session cre
     session.contextKey = null;
     session.remoteChars = 0;
     console.log(`${agentTag} Created new session: ${session.id}`);
+    if (session.agentId) await persistSession(session.agentId, session);
 }
 
 async function postCompletion(session, account, modelCfg, promptText, signal, refFileIds = []) {
@@ -2590,7 +2620,7 @@ const server = http.createServer(async (req, res) => {
             in_flight: inFlight,
             accounts: accounts.map(accountStatus),
             config_ready: hasAuthConfig(),
-            session_reuse: { strategy: 'sticky per x-agent-session/user', automatic_rollover: false, automatic_idle_eviction: false, persistence: 'supabase_pending_configuration', reset: 'explicit /new or POST /reset-session', reset_all: 'POST /reset-session?agent=all' },
+            session_reuse: { strategy: 'sticky per x-agent-session/user', automatic_rollover: false, automatic_idle_eviction: false, persistence: { enabled: sessionStore.enabled, provider: 'supabase', table: 'ultimateai_sessions' }, reset: 'explicit /new or POST /reset-session', reset_all: 'POST /reset-session?agent=all' },
         });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(health));
@@ -2647,12 +2677,17 @@ const server = http.createServer(async (req, res) => {
         const agentId = url.searchParams.get('agent') || 'default';
         if (agentId === 'all') {
             const count = sessions.size;
+            if (sessionStore.enabled) await sessionStore.clear();
             sessions.clear();
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'all_sessions_cleared', count }));
             return;
         }
-        const session = sessions.get(agentId);
+        let session = sessions.get(agentId);
+        if (!session && sessionStore.enabled) {
+            session = await sessionStore.load(agentId);
+            if (session) sessions.set(agentId, session);
+        }
         if (!session) {
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: `No session for agent: ${agentId}` }));
@@ -2661,6 +2696,7 @@ const server = http.createServer(async (req, res) => {
         const historyCount = session.history.length;
         const historyPreview = session.history.map(e => e.user.substring(0, 40)).join(' | ');
         resetRemoteSession(session);
+        await persistSession(agentId, session);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'session_reset', agent: agentId, history_preserved: historyCount, history: historyPreview }));
         return;
@@ -2781,7 +2817,8 @@ const server = http.createServer(async (req, res) => {
             if (lastUserText === '/new') {
                 const existing = sessions.get(agentId);
                 const historyCount = existing ? existing.history.length : 0;
-                sessions.set(agentId, createSession());
+                sessions.set(agentId, createSession(agentId));
+                await persistSession(agentId, sessions.get(agentId));
                 console.log(`${agentTag} /new received — session reset (history cleared: ${historyCount})`);
                 const confirmation = buildTextResponse('Started a new chat. Session and history have been reset.', '/new', requestedModel);
                 sendCompletion(res, apiMode, stream, confirmation);
@@ -2819,7 +2856,7 @@ const server = http.createServer(async (req, res) => {
             // first request owns the agent's chat; overlapping requests (e.g.
             // Hermes background reviews from the same host) run in a private,
             // throwaway chat instead of corrupting it (#23).
-            const agentSession = getOrCreateAgentSession(agentId);
+            const agentSession = await getOrCreateAgentSession(agentId);
             const ephemeral = agentSession.busy === true;
             const session = ephemeral ? createSession() : agentSession;
             if (ephemeral) {
@@ -3273,6 +3310,7 @@ const server = http.createServer(async (req, res) => {
                 session.sentMessageKeys = plan.keys;
                 session.contextKey = contextKey;
             }
+            if (!ephemeral) await persistSession(agentId, agentSession);
 
             const openaiResponse = toolCall
                 ? buildToolCallResponse(toolCall, requestedModel, clientPromptText, reasoningContent)
