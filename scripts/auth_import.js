@@ -85,7 +85,7 @@ function secureWriteJson(file, data) {
   if (process.platform !== 'win32') fs.chmodSync(file, 0o600);
 }
 function printHelp() {
-  console.log(`FreeDeepseekAPI auth import
+  console.log(`UltimateAI auth import
 
 Usage:
   npm run auth:import -- --input ./deepseek-auth.json
