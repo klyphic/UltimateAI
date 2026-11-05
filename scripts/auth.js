@@ -11,14 +11,14 @@ const ROOT = path.resolve(__dirname, '..');
 loadDotEnv(path.join(ROOT, '.env'));
 const AUTH_PATH = defaultAuthOutputPath(process.env, ROOT);
 const PROFILE_DIR = process.env.DEEPSEEK_CHROME_PROFILE || path.join(ROOT, '.chrome-for-testing-profile-deepseek');
-const WATERMARK = 't.me/forgetmeai';
+const WATERMARK = 'ForgetMeAI × FAST';
 
 function prompt(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise(resolve => rl.question(question, ans => { rl.close(); resolve(ans); }));
 }
 function divider() { console.log('======================================================'); }
-function watermark(prefix = 'ForgetMeAI') { return `${prefix}: ${WATERMARK}`; }
+function watermark(prefix = 'UltimateAI') { return `${prefix}: ${WATERMARK}`; }
 function loadAuth() {
   try { return JSON.parse(fs.readFileSync(AUTH_PATH, 'utf8')); }
   catch { return null; }
