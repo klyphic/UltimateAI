@@ -4,8 +4,8 @@
   "description": "ForgetMeAI × FAST — OpenAI-compatible API proxy for DeepSeek Web",
   "main": "server.js",
   "bin": {
-    "free-deepseek-api": "./server.js",
-    "free-deepseek-client": "./client.js"
+    "ultimateai": "./server.js",
+    "ultimateai-client": "./client.js"
   },
   "scripts": {
     "start": "node server.js",
