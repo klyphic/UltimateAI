@@ -71,7 +71,7 @@ async function liveCheck(auth) {
 }
 async function main(args = process.argv.slice(2)) {
   const offline = argHas(args, '--offline') || isTruthy(process.env.DOCTOR_OFFLINE);
-  console.log('FreeDeepseekAPI doctor');
+  console.log('UltimateAI doctor');
   console.log(`Auth source: ${process.env.DEEPSEEK_AUTH_DIR ? 'DEEPSEEK_AUTH_DIR' : 'DEEPSEEK_AUTH_PATH/default'}`);
   const results = authPaths().map(checkAuthFile);
   let ok = true;
