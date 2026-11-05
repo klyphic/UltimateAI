@@ -1,7 +1,7 @@
-# systemd unit for running FreeDeepseekAPI as a permanent service on a VPS.
+# systemd unit for running UltimateAI as a permanent service on a VPS.
 # Install steps: README → "Постоянный сервис на VPS (systemd)".
 [Unit]
-Description=FreeDeepseekAPI (OpenAI/Anthropic-compatible proxy for DeepSeek Web)
+Description=UltimateAI (OpenAI/Anthropic-compatible proxy for DeepSeek Web)
 After=network-online.target
 Wants=network-online.target
 
@@ -9,7 +9,7 @@ Wants=network-online.target
 Type=simple
 User=freedeepseek
 Group=freedeepseek
-WorkingDirectory=/opt/FreeDeepseekAPI
+WorkingDirectory=/opt/UltimateAI
 Environment=NODE_ENV=production
 Environment=NON_INTERACTIVE=1
 Environment=HOST=127.0.0.1
