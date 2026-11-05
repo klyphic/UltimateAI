@@ -1,7 +1,7 @@
 {
-  "name": "free-deepseek-api",
+  "name": "ultimateai",
   "version": "0.1.0",
-  "description": "OpenAI-compatible local API proxy for DeepSeek Web chat",
+  "description": "ForgetMeAI × FAST — OpenAI-compatible API proxy for DeepSeek Web",
   "main": "server.js",
   "bin": {
     "free-deepseek-api": "./server.js",
@@ -30,6 +30,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ForgetMeAI/FreeDeepseekAPI.git"
+    "url": "https://github.com/klyphic/UltimateAI.git"
   }
 }
