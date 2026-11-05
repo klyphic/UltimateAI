@@ -95,7 +95,7 @@ data: {"p":"response/status","o":"SET","v":"FINISHED"}
 - `RESPONSE`/`SEARCH` fragments are the answer, `THINK` fragments the reasoning.
 - `status: INCOMPLETE` means the output limit was hit; the proxy asks for a continuation.
 - `{"type":"error","content":"..."}` events carry model errors such as
-  "Содержание слишком длинное" (content too long) or rate limits.
+  "Content is too long" (content too long) or rate limits.
 - Each completion needs a fresh PoW answer computed with DeepSeek's SHA3 WASM
   module (`lib/pow.js`, compiled once per WASM URL).
 
