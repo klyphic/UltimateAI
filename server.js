@@ -2318,7 +2318,7 @@ function extractScreenshotPaths(messages) {
     return paths;
 }
 
-const PROMPT_COMPACTION_MARKER = '\n\n[Earlier context compacted by FreeDeepseekAPI]\n\n';
+const PROMPT_COMPACTION_MARKER = '\n\n[Earlier context compacted by UltimateAI]\n\n';
 
 function truncatePromptMiddle(text, maxChars, headRatio = 0.35) {
     const value = String(text || '');
