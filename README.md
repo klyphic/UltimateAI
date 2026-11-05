@@ -1,11 +1,11 @@
-# FreeDeepseekAPI
+# UltimateAI
 
 <p align="center">
   <strong>Локальный OpenAI-compatible API proxy для DeepSeek Web Chat</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/ForgetMeAI/FreeDeepseekAPI/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green.svg" /></a>
+  <a href="https://github.com/ForgetMeAI/UltimateAI/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green.svg" /></a>
   <img alt="Node.js 18 plus" src="https://img.shields.io/badge/node-18%2B-339933.svg" />
   <img alt="No npm dependencies" src="https://img.shields.io/badge/dependencies-0-blue.svg" />
   <img alt="OpenAI compatible" src="https://img.shields.io/badge/OpenAI-compatible-111111.svg" />
@@ -20,13 +20,13 @@
   <a href="#-open-webui">Open WebUI</a>
 </p>
 
-FreeDeepseekAPI поднимает локальный API-сервер для **DeepSeek Web Chat** (`chat.deepseek.com`) и позволяет подключать DeepSeek Web к Open WebUI, LiteLLM, Hermes, Claude Code, OpenAI SDK-style клиентам и другим OpenAI-compatible инструментам.
+UltimateAI поднимает локальный API-сервер для **DeepSeek Web Chat** (`chat.deepseek.com`) и позволяет подключать DeepSeek Web к Open WebUI, LiteLLM, Hermes, Claude Code, OpenAI SDK-style клиентам и другим OpenAI-compatible инструментам.
 
 Проект работает через ваш обычный залогиненный аккаунт DeepSeek в отдельном Chrome-профиле. Локальный сервер принимает API-запросы, а дальше сам ходит в DeepSeek Web через сохранённую browser-сессию.
 
 > ⚠️ Это экспериментальный web-chat proxy. DeepSeek может менять внутренний Web API без предупреждения. Для production-кейсов надёжнее официальный платный API DeepSeek.
 
-ForgetMeAI: https://t.me/forgetmeai
+**ForgetMeAI × FAST** — maintained fork.
 
 ---
 
@@ -89,8 +89,8 @@ ForgetMeAI: https://t.me/forgetmeai
 ## ⚡ Быстрый старт
 
 ```bash
-git clone https://github.com/ForgetMeAI/FreeDeepseekAPI.git
-cd FreeDeepseekAPI
+git clone https://github.com/ForgetMeAI/UltimateAI.git
+cd UltimateAI
 npm run auth
 npm start
 ```
@@ -153,8 +153,8 @@ Browser-запросы разрешены с loopback-origin. Если UI отк
 ## 🪟 Windows запуск
 
 ```powershell
-git clone https://github.com/ForgetMeAI/FreeDeepseekAPI.git
-cd FreeDeepseekAPI
+git clone https://github.com/ForgetMeAI/UltimateAI.git
+cd UltimateAI
 npm run auth
 npm start
 ```
@@ -173,8 +173,8 @@ npm run auth
 ## 🐧 Linux / Chromium запуск
 
 ```bash
-git clone https://github.com/ForgetMeAI/FreeDeepseekAPI.git
-cd FreeDeepseekAPI
+git clone https://github.com/ForgetMeAI/UltimateAI.git
+cd UltimateAI
 CHROME_PATH=$(which chromium) npm run auth
 npm start
 ```
@@ -202,13 +202,13 @@ npm run auth
 2. Скопируйте `deepseek-auth.json` на VPS:
 
 ```bash
-scp deepseek-auth.json user@your-vps:/opt/FreeDeepseekAPI/deepseek-auth.json
+scp deepseek-auth.json user@your-vps:/opt/UltimateAI/deepseek-auth.json
 ```
 
 3. На VPS импортируйте/проверьте файл и выставьте безопасные права:
 
 ```bash
-cd /opt/FreeDeepseekAPI
+cd /opt/UltimateAI
 npm run auth:import -- --input ./deepseek-auth.json
 npm run doctor -- --offline
 ```
@@ -237,8 +237,8 @@ Node.js 18+ (`node` в `/usr/bin` или `/usr/local/bin`).
 
 ```bash
 # 1. Пользователь и код
-sudo useradd --system --home /opt/FreeDeepseekAPI --shell /usr/sbin/nologin freedeepseek
-sudo git clone https://github.com/ForgetMeAI/FreeDeepseekAPI /opt/FreeDeepseekAPI
+sudo useradd --system --home /opt/UltimateAI --shell /usr/sbin/nologin freedeepseek
+sudo git clone https://github.com/ForgetMeAI/UltimateAI /opt/UltimateAI
 
 # 2. Секреты: auth-файл из `npm run auth` на домашнем ПК и ключ для клиентов
 sudo install -d -m 0750 -o root -g freedeepseek /etc/free-deepseek-api
@@ -246,13 +246,13 @@ sudo install -m 0600 -o freedeepseek -g freedeepseek ./deepseek-auth.json /etc/f
 openssl rand -hex 32 | sudo install -m 0600 -o freedeepseek -g freedeepseek /dev/stdin /etc/free-deepseek-api/proxy-api-key
 
 # 3. Сервис
-sudo cp /opt/FreeDeepseekAPI/deploy/free-deepseek-api.service /etc/systemd/system/
+sudo cp /opt/UltimateAI/deploy/free-deepseek-api.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now free-deepseek-api
 
 # 4. Проверка
 curl -fsS http://127.0.0.1:9655/readyz
-sudo -u freedeepseek env DEEPSEEK_AUTH_PATH=/etc/free-deepseek-api/deepseek-auth.json node /opt/FreeDeepseekAPI/scripts/doctor.js
+sudo -u freedeepseek env DEEPSEEK_AUTH_PATH=/etc/free-deepseek-api/deepseek-auth.json node /opt/UltimateAI/scripts/doctor.js
 journalctl -u free-deepseek-api -f
 ```
 
@@ -262,7 +262,7 @@ journalctl -u free-deepseek-api -f
 - Доступ снаружи — через reverse proxy с HTTPS (nginx/Caddy) или SSH-туннель.
   Если нужно слушать сеть напрямую, задайте `HOST=0.0.0.0` в
   `/etc/free-deepseek-api/env` (туда же — любые `DEEPSEEK_*` настройки).
-- Обновление: `cd /opt/FreeDeepseekAPI && sudo git pull && sudo systemctl restart free-deepseek-api`.
+- Обновление: `cd /opt/UltimateAI && sudo git pull && sudo systemctl restart free-deepseek-api`.
 - Новый логин DeepSeek: положите файл той же командой, чтобы сохранить
   владельца и права, и перезапустите сервис:
   `sudo install -m 0600 -o freedeepseek -g freedeepseek ./deepseek-auth.json /etc/free-deepseek-api/deepseek-auth.json && sudo systemctl restart free-deepseek-api`.
@@ -376,7 +376,7 @@ npm run doctor -- --offline
 
 ## ♻️ Session reuse и сброс чатов
 
-FreeDeepseekAPI не создаёт новый DeepSeek чат на каждый HTTP-запрос без причины. Логика такая:
+UltimateAI не создаёт новый DeepSeek чат на каждый HTTP-запрос без причины. Логика такая:
 
 - один `x-agent-session`, `session` или `user` → одна DeepSeek chat session;
 - если session id уже есть — proxy переиспользует его и продолжает chain через `parent_message_id`;
@@ -589,7 +589,7 @@ curl -X POST http://localhost:9655/v1/responses \
 
 ### Tool calling
 
-FreeDeepseekAPI принимает:
+UltimateAI принимает:
 
 - OpenAI `tools`;
 - Anthropic `tools`;
@@ -764,7 +764,7 @@ BASE_URL=http://127.0.0.1:9655 MODEL=deepseek-chat npm run test:live
 
 ## 📌 Статус проекта
 
-FreeDeepseekAPI — экспериментальный web-chat proxy для локального использования и интеграций. Он зависит от текущего контракта DeepSeek Web Chat, поэтому при изменениях на стороне DeepSeek может потребоваться обновление auth/session logic или model mapping.
+UltimateAI — экспериментальный web-chat proxy для локального использования и интеграций. Он зависит от текущего контракта DeepSeek Web Chat, поэтому при изменениях на стороне DeepSeek может потребоваться обновление auth/session logic или model mapping.
 
 Если что-то перестало работать:
 
@@ -776,5 +776,5 @@ FreeDeepseekAPI — экспериментальный web-chat proxy для л�
 ---
 
 <p align="center">
-  <strong>ForgetMeAI</strong> · <a href="https://t.me/forgetmeai">Telegram</a>
+  <strong>ForgetMeAI × FAST</strong> · UltimateAI
 </p>
