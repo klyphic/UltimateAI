@@ -2599,7 +2599,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const isPublicProbe = req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health' || url.pathname === '/readyz' || url.pathname === '/docs');
+    const isPublicProbe = req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health' || url.pathname === '/readyz');
     if (!isPublicProbe && !isProxyAuthorized(req.headers.authorization, PROXY_API_KEY, req.headers['x-api-key'])) {
         res.writeHead(401, {
             'Content-Type': 'application/json',
@@ -2609,22 +2609,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // Public API documentation page
-    if (req.method === 'GET' && url.pathname === '/docs') {
-        fs.readFile(path.join(__dirname, 'docs.html'), 'utf8', (error, html) => {
-            if (error) {
-                res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-                res.end('Documentation page could not be loaded');
-                return;
-            }
-            res.writeHead(200, {
-                'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'public, max-age=300',
-            });
-            res.end(html);
-        });
-        return;
-    }
+    // /docs is temporarily disabled. Keep docs.html in the repository for later re-enabling.
 
     // Health check
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health')) {
