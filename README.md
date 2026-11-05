@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ForgetMeAI/UltimateAI/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green.svg" /></a>
+  <a href="https://github.com/klyphic/UltimateAI/blob/main/LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/license-MIT-green.svg" /></a>
   <img alt="Node.js 18 plus" src="https://img.shields.io/badge/node-18%2B-339933.svg" />
   <img alt="No npm dependencies" src="https://img.shields.io/badge/dependencies-0-blue.svg" />
   <img alt="OpenAI compatible" src="https://img.shields.io/badge/OpenAI-compatible-111111.svg" />
@@ -89,7 +89,7 @@ UltimateAI поднимает локальный API-сервер для **DeepS
 ## ⚡ Быстрый старт
 
 ```bash
-git clone https://github.com/ForgetMeAI/UltimateAI.git
+git clone https://github.com/klyphic/UltimateAI.git
 cd UltimateAI
 npm run auth
 npm start
@@ -153,7 +153,7 @@ Browser-запросы разрешены с loopback-origin. Если UI отк
 ## 🪟 Windows запуск
 
 ```powershell
-git clone https://github.com/ForgetMeAI/UltimateAI.git
+git clone https://github.com/klyphic/UltimateAI.git
 cd UltimateAI
 npm run auth
 npm start
@@ -173,7 +173,7 @@ npm run auth
 ## 🐧 Linux / Chromium запуск
 
 ```bash
-git clone https://github.com/ForgetMeAI/UltimateAI.git
+git clone https://github.com/klyphic/UltimateAI.git
 cd UltimateAI
 CHROME_PATH=$(which chromium) npm run auth
 npm start
@@ -238,7 +238,7 @@ Node.js 18+ (`node` в `/usr/bin` или `/usr/local/bin`).
 ```bash
 # 1. Пользователь и код
 sudo useradd --system --home /opt/UltimateAI --shell /usr/sbin/nologin freedeepseek
-sudo git clone https://github.com/ForgetMeAI/UltimateAI /opt/UltimateAI
+sudo git clone https://github.com/klyphic/UltimateAI /opt/UltimateAI
 
 # 2. Секреты: auth-файл из `npm run auth` на домашнем ПК и ключ для клиентов
 sudo install -d -m 0750 -o root -g freedeepseek /etc/free-deepseek-api
