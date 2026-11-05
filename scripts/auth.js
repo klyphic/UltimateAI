@@ -49,7 +49,7 @@ function removeLocalAuth() {
 }
 function printHelp() {
   divider();
-  console.log('FreeDeepseekAPI — управление DeepSeek Web login');
+  console.log('UltimateAI — DeepSeek Web login manager');
   console.log(watermark());
   divider();
   console.log('Опции:');
