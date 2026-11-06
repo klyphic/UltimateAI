@@ -2847,16 +2847,20 @@ const server = http.createServer(async (req, res) => {
             }
             // Use remote IP for session isolation (local gets 'dev-agent', external per-IP)
             const remoteAddr = req.socket.remoteAddress || 'unknown';
-            const requestedSession = req.headers['x-agent-session'] || params.session || params.user;
-            const agentId = requestedSession
-                ? String(requestedSession)
-                : ((remoteAddr === '127.0.0.1' || remoteAddr === '::1' || remoteAddr === '::ffff:127.0.0.1') ? 'dev-agent' : remoteAddr);
             const requestedSessionMode = String(req.headers['x-session-mode'] || params.session_mode || 'stateful').trim().toLowerCase();
             if (!['stateful', 'stateless'].includes(requestedSessionMode)) {
                 sendJsonError(res, 400, 'session mode must be either "stateful" or "stateless"', 'invalid_request_error');
                 return;
             }
             const stateless = requestedSessionMode === 'stateless';
+            // Stateless calls are fully isolated: generate a private server-side
+            // identity and ignore any caller-provided session identifiers.
+            const requestedSession = req.headers['x-agent-session'] || params.session || params.user;
+            const agentId = stateless
+                ? `stateless-${crypto.randomUUID()}`
+                : (requestedSession
+                    ? String(requestedSession)
+                    : ((remoteAddr === '127.0.0.1' || remoteAddr === '::1' || remoteAddr === '::ffff:127.0.0.1') ? 'dev-agent' : remoteAddr));
             agentTag = `[${agentId}${stateless ? ':stateless' : ''}]`;
             activeAgentId = agentId;
 
