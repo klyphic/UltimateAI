@@ -254,7 +254,7 @@ function isBrowserOriginAllowed(origin, allowedOrigins = PROXY_CORS_ORIGINS) {
 const CONTEXT_COMPACTED_HEADER = 'X-FreeDeepseek-Context-Compacted';
 function setCorsResponseHeaders(res) {
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, anthropic-version, anthropic-beta, x-agent-session');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, anthropic-version, anthropic-beta, x-agent-session, x-session-mode');
     res.setHeader('Access-Control-Expose-Headers', CONTEXT_COMPACTED_HEADER);
 }
 function markContextCompacted(res) {
@@ -2812,14 +2812,20 @@ const server = http.createServer(async (req, res) => {
             const agentId = requestedSession
                 ? String(requestedSession)
                 : ((remoteAddr === '127.0.0.1' || remoteAddr === '::1' || remoteAddr === '::ffff:127.0.0.1') ? 'dev-agent' : remoteAddr);
-            const agentTag = `[${agentId}]`;
+            const requestedSessionMode = String(req.headers['x-session-mode'] || params.session_mode || 'stateful').trim().toLowerCase();
+            if (!['stateful', 'stateless'].includes(requestedSessionMode)) {
+                sendJsonError(res, 400, 'session mode must be either "stateful" or "stateless"', 'invalid_request_error');
+                return;
+            }
+            const stateless = requestedSessionMode === 'stateless';
+            const agentTag = `[${agentId}${stateless ? ':stateless' : ''}]`;
             activeAgentId = agentId;
 
             // "/new" command: if the latest user message is exactly "/new" (whitespace-insensitive),
             // reset this agent's DeepSeek session/history instead of forwarding anything to DeepSeek.
             const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
             const lastUserText = lastUserMessage ? normalizeMessageContent(lastUserMessage.content).trim() : '';
-            if (lastUserText === '/new') {
+            if (!stateless && lastUserText === '/new') {
                 const existing = sessions.get(agentId);
                 const historyCount = existing ? existing.history.length : 0;
                 sessions.set(agentId, createSession(agentId));
@@ -2861,14 +2867,26 @@ const server = http.createServer(async (req, res) => {
             // first request owns the agent's chat; overlapping requests (e.g.
             // Hermes background reviews from the same host) run in a private,
             // throwaway chat instead of corrupting it (#23).
-            const agentSession = await getOrCreateAgentSession(agentId);
-            const ephemeral = agentSession.busy === true;
-            const session = ephemeral ? createSession() : agentSession;
-            if (ephemeral) {
-                console.log(`${agentTag} Agent session is busy; serving this concurrent request in a separate DeepSeek chat.`);
+            // Stateless requests never touch the durable agent session, local
+            // recovery history, session locks, or Supabase. The caller owns all
+            // conversation memory and must send the complete context each time.
+            let agentSession;
+            let ephemeral = stateless;
+            let session;
+            if (stateless) {
+                agentSession = createSession();
+                session = agentSession;
+                console.log(`${agentTag} Independent request: creating a fresh DeepSeek chat.`);
             } else {
-                agentSession.busy = true;
-                lockedSession = agentSession;
+                agentSession = await getOrCreateAgentSession(agentId);
+                ephemeral = agentSession.busy === true;
+                session = ephemeral ? createSession() : agentSession;
+                if (ephemeral) {
+                    console.log(`${agentTag} Agent session is busy; serving this concurrent request in a separate DeepSeek chat.`);
+                } else {
+                    agentSession.busy = true;
+                    lockedSession = agentSession;
+                }
             }
             activeSession = session;
 
