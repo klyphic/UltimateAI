@@ -195,7 +195,20 @@ curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \
   <li><code>user</code> field in JSON body</li>
   <li>Fallback to the request's remote IP (local loopback requests use <code>dev-agent</code>)</li>
  </ol>
- <div class="note warn">If you omit the session ID, requests coming from the same backend IP can share one fallback session. In a multi-user bot platform, always send a unique <code>x-agent-session</code> per agent/conversation.</div>
+ <div class="note warn">For stateful mode, provide a stable <code>x-agent-session</code> to keep each conversation isolated. Stateless mode does not need any session ID.</div>
+ <h3>Stateless request (no session ID required)</h3>
+ <p>Set <code>session_mode</code> to <code>stateless</code> in the JSON body, or send <code>x-session-mode: stateless</code>. The server generates a random internal session ID for that request, creates a fresh DeepSeek chat, returns the response, and then deletes the temporary remote chat. No <code>x-agent-session</code>, <code>session</code>, or <code>user</code> value is needed. Send the complete conversation messages in each stateless request because no conversation history is retained.</p>
+ <pre><button class="copy">Copy</button>curl -X POST "https://ai.fastdevelopers.in/v1/chat/completions" \\
+  -H "Authorization: Bearer YOUR_PROXY_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "deepseek-chat",
+    "session_mode": "stateless",
+    "messages": [
+      {"role": "user", "content": "Hello!"}
+    ],
+    "stream": false
+  }'</pre>
  <h3>List active sessions</h3>
  <pre><button class="copy">Copy</button>curl "https://ai.fastdevelopers.in/v1/sessions" \
   -H "Authorization: Bearer YOUR_PROXY_API_KEY"</pre>
