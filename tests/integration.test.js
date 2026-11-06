@@ -217,6 +217,41 @@ test('clients that send only the latest message keep using the same DeepSeek cha
   assert.equal(b.prompt, 'User: What is my name?');
 });
 
+test('stateless mode creates an independent DeepSeek chat for every API request', async () => {
+  const conversation = [
+    { role: 'system', content: 'Caller-owned system memory' },
+    { role: 'user', content: 'My project is called Klyphic' },
+    { role: 'assistant', content: 'I will remember that within this supplied context.' },
+    { role: 'user', content: 'What is my project called?' },
+  ];
+
+  const first = await chat({
+    model: 'deepseek-chat',
+    user: 'external-agent',
+    session_mode: 'stateless',
+    messages: conversation,
+  });
+  assert.equal(first.status, 200, first.text);
+
+  const second = await chat({
+    model: 'deepseek-chat',
+    user: 'external-agent',
+    messages: conversation,
+  }, { 'x-session-mode': 'stateless' });
+  assert.equal(second.status, 200, second.text);
+
+  const [a, b] = mock.state.completions.map(record => record.body);
+  assert.notEqual(a.chat_session_id, b.chat_session_id);
+  assert.equal(a.parent_message_id, null);
+  assert.equal(b.parent_message_id, null);
+  for (const upstream of [a, b]) {
+    assert.match(upstream.prompt, /Caller-owned system memory/);
+    assert.match(upstream.prompt, /My project is called Klyphic/);
+    assert.match(upstream.prompt, /What is my project called/);
+  }
+  assert.equal(internals.sessions.size, 0, 'stateless requests must not create durable in-memory agent sessions');
+});
+
 test('concurrent requests of one agent never share a DeepSeek chat', async () => {
   mock.state.respond = async (body) => {
     if (body.prompt.includes('conversation A')) {
