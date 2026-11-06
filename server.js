@@ -2637,7 +2637,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const isPublicProbe = req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health' || url.pathname === '/readyz');
+    const isPublicProbe = req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health' || url.pathname === '/readyz' || url.pathname === '/docs' || url.pathname === '/docs/');
     if (!isPublicProbe && !isProxyAuthorized(req.headers.authorization, PROXY_API_KEY, req.headers['x-api-key'])) {
         res.writeHead(401, {
             'Content-Type': 'application/json',
@@ -2647,7 +2647,23 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // /docs is temporarily disabled. Keep docs.html in the repository for later re-enabling.
+    // Public API documentation.
+    if (req.method === 'GET' && (url.pathname === '/docs' || url.pathname === '/docs/')) {
+        try {
+            const docsHtml = fs.readFileSync(path.join(__dirname, 'docs.html'), 'utf8');
+            res.writeHead(200, {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'public, max-age=300',
+                'X-Content-Type-Options': 'nosniff',
+            });
+            res.end(docsHtml);
+        } catch (error) {
+            console.error('[docs] Failed to load docs.html:', error.message);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: { message: 'API documentation is temporarily unavailable', type: 'internal_error' } }));
+        }
+        return;
+    }
 
     // Health check
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health')) {
