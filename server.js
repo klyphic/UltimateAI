@@ -2797,6 +2797,7 @@ const server = http.createServer(async (req, res) => {
         const deadlineHit = () => Date.now() - requestStartedAt > REQUEST_DEADLINE_MS;
         let activeSession = null;
         let activeAgentId = null;
+        let agentTag = '';
         let lockedSession = null;
         let live = null;
         let keepAliveTimer = null;
@@ -2856,7 +2857,7 @@ const server = http.createServer(async (req, res) => {
                 return;
             }
             const stateless = requestedSessionMode === 'stateless';
-            const agentTag = `[${agentId}${stateless ? ':stateless' : ''}]`;
+            agentTag = `[${agentId}${stateless ? ':stateless' : ''}]`;
             activeAgentId = agentId;
 
             // "/new" command: if the latest user message is exactly "/new" (whitespace-insensitive),
