@@ -865,7 +865,45 @@ async function createRemoteChat(session, account, agentTag, label = 'session cre
     session.contextKey = null;
     session.remoteChars = 0;
     console.log(`${agentTag} Created new session: ${session.id}`);
+    if (session._temporaryRemoteSessions instanceof Map) {
+        session._temporaryRemoteSessions.set(createdSessionId, account.id);
+    }
     if (session.agentId) await persistSession(session.agentId, session);
+}
+
+// Delete every remote chat created during one stateless request. This uses a
+// fresh timeout rather than the inbound request signal so client disconnects
+// cannot cancel cleanup.
+async function deleteTemporaryRemoteSessions(session, agentTag = '[stateless]') {
+    const created = session?._temporaryRemoteSessions;
+    if (!(created instanceof Map) || created.size === 0) return;
+    const pending = [...created.entries()];
+    created.clear();
+    for (const [chatSessionId, accountId] of pending) {
+        const account = accounts.find(item => item.id === accountId);
+        if (!account) {
+            console.warn(`${agentTag} Could not delete temporary DeepSeek session ${chatSessionId}: account ${accountId} is unavailable.`);
+            continue;
+        }
+        try {
+            const response = await dsFetch(dsUrl('/api/v0/chat_session/delete'), {
+                method: 'POST',
+                headers: account.headers,
+                body: JSON.stringify({ chat_session_id: chatSessionId }),
+            }, 10000);
+            const responseText = await response.text();
+            let payload = null;
+            try { payload = JSON.parse(responseText); } catch (_) {}
+            const businessCode = payload?.data?.biz_code;
+            if (!response.ok || (Number.isInteger(businessCode) && businessCode !== 0)) {
+                console.warn(`${agentTag} Temporary DeepSeek session deletion failed (HTTP ${response.status}, biz_code=${businessCode ?? 'n/a'}): ${responseText.slice(0, 160)}`);
+                continue;
+            }
+            console.log(`${agentTag} Deleted temporary DeepSeek session: ${chatSessionId}`);
+        } catch (error) {
+            console.warn(`${agentTag} Temporary DeepSeek session deletion failed for ${chatSessionId}: ${error.message}`);
+        }
+    }
 }
 
 async function postCompletion(session, account, modelCfg, promptText, signal, refFileIds = []) {
@@ -2876,6 +2914,7 @@ const server = http.createServer(async (req, res) => {
             if (stateless) {
                 agentSession = createSession();
                 session = agentSession;
+                session._temporaryRemoteSessions = new Map();
                 console.log(`${agentTag} Independent request: creating a fresh DeepSeek chat.`);
             } else {
                 agentSession = await getOrCreateAgentSession(agentId);
@@ -3367,6 +3406,9 @@ const server = http.createServer(async (req, res) => {
                 } : {}),
             }, headers);
         } finally {
+            if (stateless && activeSession) {
+                await deleteTemporaryRemoteSessions(activeSession, agentTag);
+            }
             if (keepAliveTimer) clearInterval(keepAliveTimer);
             if (lockedSession) lockedSession.busy = false;
             inFlight--;
