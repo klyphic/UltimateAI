@@ -15,7 +15,8 @@ UltimateAI exposes an API server for DeepSeek Web Chat (chat.deepseek.com). It s
 - Anthropic Messages API compatibility.
 - Reasoning output and tool-call parsing for supported formats.
 - Model aliases and capability metadata.
-- Independent agent sessions using x-agent-session, session, or user.
+- Stateful agent sessions using x-agent-session, session, or user.
+- Stateless per-request mode for external agents that manage their own conversation memory.
 - Optional Supabase persistence for agent session recovery.
 - Inline image uploads for supported request formats.
 - Multiple DeepSeek auth accounts with sticky assignment and cooldown handling.
@@ -122,7 +123,13 @@ Send a chat completion:
       -H "x-agent-session: example-agent-001" \
       -d '{"model":"deepseek-chat","messages":[{"role":"user","content":"Hello! Reply with OK."}]}'
 
-## Agent sessions and memory
+## Session modes and memory ownership
+
+UltimateAI supports two modes. **Stateful is the default**, preserving existing integration behaviour.
+
+### Stateful
+
+The proxy owns a DeepSeek remote chat per agent. It reuses that chat and sends only new message deltas when possible. Local recovery history can be persisted to Supabase when SUPABASE_URL and SUPABASE_SECRET_KEY are configured.
 
 Session identity is selected in this order:
 
@@ -133,17 +140,15 @@ Session identity is selected in this order:
 
 For multi-user or multi-agent applications, always provide a unique, stable session identifier. IP fallback is not suitable for user isolation when many users share one backend IP.
 
-The proxy reuses a DeepSeek remote chat for each agent and sends only new message deltas when possible. Local recovery history can be persisted to Supabase when SUPABASE_URL and SUPABASE_SECRET_KEY are configured. Resetting a remote session clears upstream chat identifiers but preserves local recovery history, allowing a new upstream chat to continue with saved context.
+### Stateless
 
-Reset one agent:
+Use this mode when an external AI agent owns conversation memory and sends the complete context with every API request. Each request creates a **new, independent DeepSeek chat**. UltimateAI does not reuse a previous remote chat, inject local recovery history, update a durable agent session, or persist the request session to Supabase.
 
-    curl -X POST "https://ai.fastdevelopers.in/reset-session?agent=YOUR_AGENT_ID" \
-      -H "Authorization: Bearer YOUR_PROXY_API_KEY"
+The caller must include all required context in messages on every request: system instructions, conversation history, and tool results. Tool execution remains with the caller. After receiving a tool call, execute it and send the tool result plus the relevant history in the next request.
 
-Reset all agents:
+Enable it using either the request header `x-session-mode: stateless` or the JSON field `"session_mode": "stateless"`. The header takes precedence if both are supplied. Set the mode on every request; omitted mode defaults to stateful. It is supported by Chat Completions, Responses, and Anthropic Messages endpoints.
 
-    curl -X POST "https://ai.fastdevelopers.in/reset-session?agent=all" \
-      -H "Authorization: Bearer YOUR_PROXY_API_KEY"
+Resetting a stateful remote session clears upstream chat identifiers but preserves local recovery history, allowing a new upstream chat to continue with saved context.
 
 ## Supabase session persistence
 
