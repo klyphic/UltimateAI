@@ -3406,7 +3406,7 @@ const server = http.createServer(async (req, res) => {
                 } : {}),
             }, headers);
         } finally {
-            if (stateless && activeSession) {
+            if (activeSession?._temporaryRemoteSessions instanceof Map) {
                 await deleteTemporaryRemoteSessions(activeSession, agentTag);
             }
             if (keepAliveTimer) clearInterval(keepAliveTimer);
